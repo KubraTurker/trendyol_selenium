@@ -1,48 +1,47 @@
 import unittest
+import logging
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from generic import initialize
+
+
+from cases.tests.base_test import BaseTest
 from pages.product_page import ProductPage
+from pages.home_page import HomePage
 
 
-class TestProductSelection(unittest.TestCase):
+class TestProductSelection(BaseTest):
+    """Test case is:
 
-    def setUp(self):
-        """Tarayıcı başlatılır ve test için hazırlanır."""
-        print("\n🔄 Tarayıcı başlatılıyor...")
-        self.driver = initialize.run()
-        self.driver.get(
-            "https://www.trendyol.com/yma-triko/a-t-y-xx-007-v-yaka-sac-orgu-p-863363874?merchantId=923563&boutiqueId=61")
+    1. Open the product page
+    2. Select color and size options
+    3. Verify that the selections are successful
+    """
 
     def test_select_product_options(self):
-        """Ürün sayfasında renk ve beden seçimi yapılabiliyor mu?"""
-        print("✅ Ürün sayfasına gidiliyor...")
+        """Verify that color and size selection is possible on the product page."""
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.INFO)
+        self.logger.info("Navigating to the product page and checking for overlays...")
 
-        try:
-            WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.CLASS_NAME, 'overlay'))).click()
-        except:
-            print("ℹ️ Herhangi bir overlay bulunamadı, devam ediliyor.")
+        home_page = HomePage(self.driver)
+        home_page.ready()
 
         product_page = ProductPage(self.driver)
 
-
-        print("🎨 Renk seçimi yapılıyor...")
+        self.logger.info("Selecting color option...")
         color = product_page.select_color()
-        self.assertIsNotNone(color, "❌ Renk seçimi başarısız!")
+        self.assertIsNotNone(color, "Color selection failed!")
+        self.logger.info("Color selection successful!")
 
-
-        print("📏 Beden seçimi yapılıyor...")
+        self.logger.info("Selecting size option...")
         size = product_page.select_size()
-        self.assertIsNotNone(size, "❌ Beden seçimi başarısız!")
+        self.assertIsNotNone(size, "Size selection failed!")
+        self.logger.info("Size selection successful!")
 
-        print("✅ Ürün seçenekleri başarıyla seçildi.")
-
-    def tearDown(self):
-        """Tarayıcı kapatılır."""
-        print("🛑 Tarayıcı kapatılıyor...")
-        self.driver.quit()
+        self.logger.info("Product options have been successfully selected.")
 
 
 if __name__ == "__main__":
     unittest.main()
+

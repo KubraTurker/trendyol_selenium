@@ -1,121 +1,92 @@
+import logging
+import time
 import unittest
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from generic import initialize, auth
+
 from pages.cart_page import CartPage
+from pages.home_page import HomePage
+from pages.listing_page import ListingPage
 from pages.product_page import ProductPage
-from time import sleep
+from cases.tests.base_test import BaseTest
 
-class TestAddToCart(unittest.TestCase):
 
-    def setUp(self):
-        """Tarayıcı başlatılır ve test için hazırlanır."""
-        print("\n🔄 Tarayıcı başlatılıyor...")
-        self.driver = initialize.run()
+class TestAddToCart(BaseTest):
+    """Test Case:
 
-        print("🔑 Kullanıcı giriş yapıyor...")
-        auth.run(self.driver)
-
-    def search_product(self, searchkey):
-        """Ürün arama işlemi"""
-        print(f"🔍 '{searchkey}' kelimesi ile arama yapılıyor...")
-        wait = WebDriverWait(self.driver, 10)
-        search = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@data-testid = "suggestion"]')))
-        search.send_keys(searchkey)
-        search.send_keys(Keys.ENTER)
-        sleep(2)
-
-    def clicks_first_product(self):
-        """Arama sonucundaki ilk ürüne tıklar"""
-        wait = WebDriverWait(self.driver, 10)
-        try:
-            wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'overlay'))).click()
-        except:
-            print("ℹ️ Pop-up bulunamadı, devam ediliyor.")
-
-        self.driver.execute_script("window.scrollBy(0, 400);")
-        first_product = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.p-card-wrppr.with-campaign-view a')))
-        first_product.click()
-        self.driver.switch_to.window(self.driver.window_handles[-1])
-
-    def go_to_cart(self):
-        """Sepete gitme işlemi"""
-        wait = WebDriverWait(self.driver, 10)
-        go_to_basket = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.account-nav-item.basket-preview')))
-        go_to_basket.click()
+        1. Search for a product and open the product detail page.
+        2. Select product options (color, size) and add it to the cart.
+        3. Go to the cart and verify product details.
+        4. Remove the product from the cart.
+        """
+    expected_search_keyword = "kazak"
 
     def test_add_to_cart(self):
-        sleep(3)
-        """Ürün sepete eklenebilir mi?"""
-        print("✅ Ürün arama testi başlatılıyor...")
-        self.search_product(searchkey="kazak")
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.INFO)
+        time.sleep(2)
+        self.logger.info(f"Searching for a product: {self.expected_search_keyword}")
+        home_page = HomePage(self.driver)
+        home_page.search_product(searchkey=self.expected_search_keyword)
+        home_page.ready()
 
-        print("📌 İlk ürüne tıklanıyor...")
-        self.clicks_first_product()
+        self.logger.info("Selecting a random sorting option...")
+        listing_page = ListingPage(self.driver)
+        home_page.ready()
+        listing_page.open_dropdown()
+        listing_page.selects_sort()
+
+        self.logger.info("Clicking on the first product...")
+        time.sleep(2)
+        listing_page.clicks_first_product()
+        home_page.ready()
+
+        self.logger.info("Retrieving product details...")
         product_page = ProductPage(self.driver)
-
-        # Pop-up kapatma
-        try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'overlay')))
-            element.click()
-        except:
-            print("ℹ️ Pop-up kapatma gerekmedi.")
-
-        print("📌 Ürün bilgileri alınıyor...")
+        home_page.ready()
         price = product_page.get_price()
 
-        print("🎨 Renk seçimi yapılıyor...")
+        self.logger.info("Selecting product color...")
         color = product_page.select_color()
-        self.assertIsNotNone(color, "❌ Renk seçimi başarısız!")
+        self.assertIsNotNone(color, "Failed to select color!")
 
-        print("📏 Beden seçimi yapılıyor...")
+        self.logger.info("Selecting product size...")
         size = product_page.select_size()
-        self.assertIsNotNone(size, "❌ Beden seçimi başarısız!")
+        self.assertIsNotNone(size, "Failed to select size!")
 
         name = product_page.get_name()
 
-        sleep(3)
-        print("🛒 Ürün sepete ekleniyor...")
+        time.sleep(2)
+        self.logger.info("Adding product to the cart...")
         product_page.add_to_basket()
         self.driver.implicitly_wait(5)
 
-        print("📦 Sepete gidiliyor...")
-        self.go_to_cart()
+        self.logger.info("Navigating to the cart...")
+        home_page.go_to_cart()
+        home_page.ready()
 
-        self.driver.implicitly_wait(4)
         cart_page = CartPage(self.driver)
-
-        try:
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'overlay')))
-            element.click()
-        except:
-            print("ℹ️ Pop-up kapatma gerekmedi.")
-
-        sleep(1)
-        print("🛍️ Sepetteki ürün bilgileri alınıyor...")
+        time.sleep(1)
+        self.logger.info("Retrieving cart item details...")
         cart_items = cart_page.cart_items()
-        self.assertGreater(len(cart_items), 0, "❌ Sepette ürün bulunamadı!")
+        self.assertGreater(len(cart_items), 0, " No items found in the cart!")
 
-        cart_names= " ".join(item.name for item in cart_items)
-        cart_prices = [item.price for item in cart_items]
+        cart_names = " ".join(item.name for item in cart_items)
+        self.assertIn(name, cart_names, f" {name} is not found in the cart!")
 
-        self.assertIn(name, cart_names, f"❌ {name} sepette bulunamadı!")
-        self.assertIn(price, cart_prices, f"❌ Fiyat eşleşmesi başarısız! Ürün fiyatı: {price}, Sepetteki fiyatlar: {cart_prices}")
+        cart_prices = (item.price for item in cart_items)
+        total_price = sum(cart_prices)
+        count = sum(item.count for item in cart_items)
 
-        print("🗑️ Sepet temizleniyor...")
+        expected_total_price = float(price) * count
+        if expected_total_price != total_price:
+            self.logger.error(f"Price mismatch! Expected: {expected_total_price}, Found: {total_price}")
+        self.assertEqual(expected_total_price, total_price)
+
+        self.logger.info("Clearing the cart...")
         cart_page.cart_clear()
-        sleep(2)
+        time.sleep(2)
 
-        print("✅ Test başarılı: Ürün sepete eklendi, doğrulandı ve kaldırıldı!")
+        self.logger.info("Test Passed: Product added, verified, and removed from the cart!")
 
-    def tearDown(self):
-        """Tarayıcı kapatılır."""
-        print("🛑 Tarayıcı kapatılıyor...")
-        self.driver.quit()
 
 if __name__ == "__main__":
     unittest.main()
