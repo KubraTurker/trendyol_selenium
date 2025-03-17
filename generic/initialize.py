@@ -56,6 +56,7 @@ def run() -> webdriver.Chrome:
     driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 1000)
     driver.get("https://www.trendyol.com/")
+    driver.maximize_window()
     #watcher(driver)
     accept_cookie(driver)
     # page ready
