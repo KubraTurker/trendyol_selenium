@@ -1,5 +1,6 @@
 import unittest
 import logging
+import time
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -8,6 +9,7 @@ from selenium.webdriver.common.by import By
 from cases.tests.base_test import BaseTest
 from pages.product_page import ProductPage
 from pages.home_page import HomePage
+from pages.listing_page import ListingPage
 
 
 class TestProductSelection(BaseTest):
@@ -17,17 +19,29 @@ class TestProductSelection(BaseTest):
     2. Select color and size options
     3. Verify that the selections are successful
     """
+    expected_search_keyword = "kazak"
 
     def test_select_product_options(self):
         """Verify that color and size selection is possible on the product page."""
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
-        self.logger.info("Navigating to the product page and checking for overlays...")
-
+        time.sleep(2)
+        self.logger.info(f"Searching for a product: {self.expected_search_keyword}")
         home_page = HomePage(self.driver)
+        home_page.search_product(searchkey=self.expected_search_keyword)
+        home_page.ready()
+
+        self.logger.info("Selecting a random sorting option...")
+        listing_page = ListingPage(self.driver)
+        home_page.ready()
+
+        self.logger.info("Clicking on the first product...")
+        time.sleep(2)
+        listing_page.clicks_first_product()
         home_page.ready()
 
         product_page = ProductPage(self.driver)
+        home_page.ready()
 
         self.logger.info("Selecting color option...")
         color = product_page.select_color()
