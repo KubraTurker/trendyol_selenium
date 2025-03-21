@@ -1,7 +1,7 @@
-import threading
-from dotenv import load_dotenv
 import os
+import threading
 from selenium import webdriver
+from dotenv import load_dotenv
 from selenium.common import TimeoutException, NoSuchWindowException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
