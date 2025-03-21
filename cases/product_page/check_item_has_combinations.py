@@ -52,6 +52,4 @@ class TestProductSelection(BaseTest):
         self.logger.info("Product options have been successfully selected.")
 
 
-if __name__ == "__main__":
-    unittest.main()
 

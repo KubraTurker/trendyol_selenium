@@ -41,10 +41,3 @@ class TestAddToWishlist(BaseTest):
         self.logger.info("Item successfully added to the wishlist.")
 
         home_page.ready()
-
-
-
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -57,6 +57,3 @@ class TestUserLogin(BaseTest):
             self.logger.error("'My Account' page did not load within the expected time!")
             self.fail("'My Account' page did not open in time!")
 
-
-if __name__ == "__main__":
-    unittest.main()

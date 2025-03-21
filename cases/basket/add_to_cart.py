@@ -86,7 +86,3 @@ class TestAddToCart(BaseTest):
         time.sleep(2)
 
         self.logger.info("Test Passed: Product added, verified, and removed from the cart!")
-
-
-if __name__ == "__main__":
-    unittest.main()
