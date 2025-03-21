@@ -1,10 +1,6 @@
 import unittest
 import logging
 import time
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-
 
 from cases.tests.base_test import BaseTest
 from pages.product_page import ProductPage
